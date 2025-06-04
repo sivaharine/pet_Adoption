@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { 
   StyleSheet, 
@@ -19,6 +18,9 @@ import Colors from '@/constants/Colors';
 import Header from '@/components/Header';
 import Input from '@/components/Input';
 import Button from '@/components/Button';
+import Dropdown from '@/components/Dropdown';
+
+const animalTypes = ['Dog', 'Cat', 'Cow', 'Bird', 'Goat', 'Fish', 'Other'];
 
 const AddPetSchema = Yup.object().shape({
   name: Yup.string()
@@ -26,6 +28,8 @@ const AddPetSchema = Yup.object().shape({
     .required('Pet name is required'),
   breed: Yup.string()
     .required('Breed is required'),
+  type: Yup.string()
+    .required('Animal type is required'),
   age: Yup.string()
     .required('Age is required'),
   price: Yup.number()
@@ -44,6 +48,17 @@ const AddPetSchema = Yup.object().shape({
   description: Yup.string()
     .required('Description is required'),
 });
+
+interface FormValues {
+  name: string;
+  breed: string;
+  type: string;
+  age: string;
+  price: string;
+  location: string;
+  description: string;
+  isStray: boolean;
+}
 
 export default function AddPetScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -69,7 +84,7 @@ export default function AddPetScreen() {
     }
   };
 
-  const handleAddPet = async (values: any) => {
+  const handleAddPet = async (values: FormValues) => {
     try {
       setIsSubmitting(true);
       
@@ -85,34 +100,19 @@ export default function AddPetScreen() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Reset form
-      setPhoto(null);
-      values.name = '';
-      values.breed = '';
-      values.age = '';
-      values.price = '';
-      values.location = '';
-      values.description = '';
-      values.isStray = false;
-      
       Alert.alert(
         'Success', 
         'Pet added successfully!',
         [{ text: 'OK' }]
       );
+
+      // Reset form and photo
+      setPhoto(null);
     } catch (error) {
       console.error('Add pet error:', error);
       Alert.alert('Error', 'Failed to add pet. Please try again.');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const activateCamera = () => {
-    if (permission?.granted) {
-      setIsCameraActive(true);
-    } else {
-      requestPermission();
     }
   };
 
@@ -158,7 +158,11 @@ export default function AddPetScreen() {
   if (isCameraActive) {
     return (
       <View style={styles.container}>
-        <Header title="Take Pet Photo" showBackButton={() => setIsCameraActive(false)} />
+        <Header 
+          title="Take Pet Photo" 
+          showBackButton={true}
+          onBack={() => setIsCameraActive(false)} 
+        />
         {renderCamera()}
       </View>
     );
@@ -182,7 +186,7 @@ export default function AddPetScreen() {
               <Image source={{ uri: photo }} style={styles.photoPreview} />
               <TouchableOpacity 
                 style={styles.changePhotoButton}
-                onPress={activateCamera}
+                onPress={() => setIsCameraActive(true)}
               >
                 <Text style={styles.changePhotoText}>Change Photo</Text>
               </TouchableOpacity>
@@ -190,7 +194,7 @@ export default function AddPetScreen() {
           ) : (
             <TouchableOpacity 
               style={styles.addPhotoButton}
-              onPress={activateCamera}
+              onPress={() => setIsCameraActive(true)}
             >
               <Camera size={24} color={Colors.primary[500]} />
               <Text style={styles.addPhotoText}>Take a Photo</Text>
@@ -202,6 +206,7 @@ export default function AddPetScreen() {
           initialValues={{ 
             name: '', 
             breed: '', 
+            type: '',
             age: '', 
             price: '', 
             location: '', 
@@ -220,6 +225,14 @@ export default function AddPetScreen() {
                 onChangeText={handleChange('name')}
                 onBlur={handleBlur('name')}
                 error={touched.name && errors.name ? errors.name : undefined}
+              />
+              
+              <Dropdown
+                label="Animal Type"
+                value={values.type}
+                options={animalTypes}
+                onSelect={(value) => setFieldValue('type', value)}
+                error={touched.type && errors.type ? errors.type : undefined}
               />
               
               <Input
@@ -395,6 +408,9 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
   },
+  submitButton: {
+    marginTop: 24,
+  },
   strayToggleContainer: {
     marginBottom: 16,
   },
@@ -434,9 +450,6 @@ const styles = StyleSheet.create({
   textArea: {
     height: 100,
     paddingTop: 12,
-  },
-  submitButton: {
-    marginTop: 24,
   },
   cameraContainer: {
     flex: 1,
@@ -488,4 +501,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
   },
-});
+}); 

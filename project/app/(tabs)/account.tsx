@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   StyleSheet, 
   Text, 
   View, 
   TouchableOpacity, 
   Image, 
-  ScrollView,
+  ScrollView, 
   Switch,
   Alert,
   SafeAreaView
@@ -14,20 +14,23 @@ import { useRouter } from 'expo-router';
 import { User, Mail, Phone, MapPin, Bell, Lock, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import Header from '@/components/Header';
+import { useUser } from '@/context/UserContext';
 
-const MOCK_USER = {
-  id: '1',
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  phone: '+1 (555) 123-4567',
-  address: '123 Pet Street, Pawville, CA',
-  imageUrl: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg',
-};
 
 export default function AccountScreen() {
   const router = useRouter();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  
+  const { user, setUser } = useUser();
+  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+
+  if (!user) {
+    // if user not logged in, show message or redirect
+    return (
+      <View style={styles.centered}>
+        <Text>Please login first.</Text>
+      </View>
+    );
+  }
+
   const handleLogout = () => {
     Alert.alert(
       'Logout',
@@ -39,13 +42,16 @@ export default function AccountScreen() {
         },
         {
           text: 'Logout',
-          onPress: () => router.replace('/login'),
+          onPress: () => {
+            setUser(null);
+            router.replace('/login');
+          },
           style: 'destructive',
         },
       ]
     );
   };
-  
+
   return (
     <SafeAreaView style={styles.container}>
       <Header title="My Account" />
@@ -56,12 +62,12 @@ export default function AccountScreen() {
       >
         <View style={styles.profileSection}>
           <Image 
-            source={{ uri: MOCK_USER.imageUrl }} 
+            source={{ uri: user.imageUrl }} 
             style={styles.profileImage}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.userName}>{MOCK_USER.name}</Text>
-            <Text style={styles.userEmail}>{MOCK_USER.email}</Text>
+            <Text style={styles.userName}>{user.name}</Text>
+            <Text style={styles.userEmail}>{user.email}</Text>
           </View>
           <TouchableOpacity style={styles.editProfileButton}>
             <Text style={styles.editProfileText}>Edit</Text>
@@ -77,7 +83,7 @@ export default function AccountScreen() {
             </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Full Name</Text>
-              <Text style={styles.infoValue}>{MOCK_USER.name}</Text>
+              <Text style={styles.infoValue}>{user.name}</Text>
             </View>
           </View>
           
@@ -87,7 +93,7 @@ export default function AccountScreen() {
             </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{MOCK_USER.email}</Text>
+              <Text style={styles.infoValue}>{user.email}</Text>
             </View>
           </View>
           
@@ -97,7 +103,7 @@ export default function AccountScreen() {
             </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Phone</Text>
-              <Text style={styles.infoValue}>{MOCK_USER.phone}</Text>
+              <Text style={styles.infoValue}>{user.phone || 'N/A'}</Text>
             </View>
           </View>
           
@@ -107,7 +113,7 @@ export default function AccountScreen() {
             </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Address</Text>
-              <Text style={styles.infoValue}>{MOCK_USER.address}</Text>
+              <Text style={styles.infoValue}>{user.address || 'N/A'}</Text>
             </View>
           </View>
         </View>
@@ -170,6 +176,11 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 30,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profileSection: {
     flexDirection: 'row',

@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 import { Chrome as Home, CirclePlus as PlusCircle, Heart, User, DollarSign } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 
+
 export default function TabLayout() {
   return (
     <Tabs
